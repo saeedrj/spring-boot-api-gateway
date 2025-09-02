@@ -25,6 +25,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -52,10 +53,10 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             try {
                 username = jwtUtil.extractUsername(jwt);
             } catch (ExpiredJwtException e) {
-                returnFilter(response);
+                returnAuthenticationFailure(response);
                 return;
             } catch (Exception e) {
-                returnFilter(response);
+                returnAuthenticationFailure(response);
                 log.error("Error extracting username from JWT: {}", e.getMessage());
                 return;
             }
@@ -68,15 +69,19 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 List<String> permissions = (List<String>) claims.get("permissions");
 
                if(redisService.getIdLogin(claims.get("jti").toString()) == null){
-                   returnFilter(response);
+                   returnAuthenticationFailure(response);
                    return;
                }
 
                 String args[] = request.getRequestURI().split("/");
-                String path = "/"+args[1]+"/"+args[2];
-                if (permissions == null || permissions.stream().noneMatch(path::equalsIgnoreCase)) {
+                String path = args[1]+"/"+args[2];
+
+                List<String> permissionRole = permissions.stream().map(permission ->
+                        permission.trim().split(":")[1]).toList();
+
+                if (permissionRole.stream().noneMatch(path::equalsIgnoreCase)) {
                     //TODO log Security
-                    returnGrantedFilter(response);
+                    returnAuthorizationFailure(response);
                     return;
                 }
 
@@ -94,17 +99,17 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private void returnFilter(HttpServletResponse response) throws IOException {
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.setStatus(HttpStatus.FORBIDDEN.value());
-        ResponseDto errorResponse = new ResponseDto(EnumResult.FORBIDDEN);
-        objectMapper.writeValue(response.getWriter(), errorResponse);
-    }
-
-    private void returnGrantedFilter(HttpServletResponse response) throws IOException {
+    private void returnAuthenticationFailure(HttpServletResponse response) throws IOException {
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         ResponseDto errorResponse = new ResponseDto(EnumResult.UNAUTHORIZED);
+        objectMapper.writeValue(response.getWriter(), errorResponse);
+    }
+
+    private void returnAuthorizationFailure(HttpServletResponse response) throws IOException {
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setStatus(HttpStatus.FORBIDDEN.value());
+        ResponseDto errorResponse = new ResponseDto(EnumResult.FORBIDDEN);
         objectMapper.writeValue(response.getWriter(), errorResponse);
     }
 }
