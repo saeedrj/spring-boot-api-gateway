@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -73,13 +74,36 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                    return;
                }
 
-                String args[] = request.getRequestURI().split("/");
-                String path = args[1]+"/"+args[2];
+                String[] args = request.getRequestURI().split("/");
+                if (args.length >= 3) {
+                    String path = args[1] + "/" + args[2];
 
-                List<String> permissionRole = permissions.stream().map(permission ->
-                        permission.trim().split(":")[1]).toList();
+                    boolean allowed = userDetails.getAuthorities().stream()
+                            .map(GrantedAuthority::getAuthority)
+                            .map(auth -> auth.split(":")[1].trim())
+                            .anyMatch(auth -> {
+                                String[] parts = auth.split("/");
+                                String[] pathParts = path.split("/");
 
-                if (permissionRole.stream().noneMatch(path::equalsIgnoreCase)) {
+                                if (auth.endsWith("/**")) {
+                                    return pathParts.length >= 1 &&
+                                            parts[0].equalsIgnoreCase(pathParts[0]);
+                                }
+
+                                if (parts.length >= 2 && pathParts.length >= 2) {
+                                    String normalizedAuth = parts[0] + "/" + parts[1];
+                                    String normalizedPath = pathParts[0] + "/" + pathParts[1];
+                                    return normalizedAuth.equalsIgnoreCase(normalizedPath);
+                                }
+                                return false;
+                            });
+
+                    if (!allowed) {
+                        //TODO log Security
+                        returnAuthorizationFailure(response);
+                        return;
+                    }
+                } else {
                     //TODO log Security
                     returnAuthorizationFailure(response);
                     return;

@@ -23,16 +23,4 @@ public class RedisConfig {
         return template;
     }
 
-    @Bean
-    public RedisTemplate<String, Boolean> redisTemplateBoolean(RedisConnectionFactory redisConnectionFactory) {
-        RedisTemplate<String, Boolean> template = new RedisTemplate<>();
-        template.setConnectionFactory(redisConnectionFactory);
-
-        template.setKeySerializer(new StringRedisSerializer());
-        template.setValueSerializer(new GenericToStringSerializer<>(Integer.class));
-        template.setHashKeySerializer(new StringRedisSerializer());
-        template.setHashValueSerializer(new GenericToStringSerializer<>(Integer.class));
-
-        return template;
-    }
 }

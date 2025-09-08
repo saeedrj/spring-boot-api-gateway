@@ -14,6 +14,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -29,7 +30,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         UserEntity user = userRepository.findEnabledUserWithPermissionsByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
 
-        Set<GrantedAuthority> authorities = user.getUserRoles().stream()
+        List<GrantedAuthority> authorities = user.getUserRoles().stream()
                 .map(UserRoleEntity::getRole)
                 .flatMap(role -> role.getRolePermissions().stream())
                 .filter(rp -> rp.getPermission() != null && rp.getPermission().getServiceEntity().isActive())
@@ -38,7 +39,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                     ServiceEntity service = permission.getServiceEntity();
                     return new SimpleGrantedAuthority(rp.getRole().getName()+":"+service.getPathName() + "/" + permission.getPathPermission());
                 })
-                .collect(Collectors.toSet());
+                .collect(Collectors.toList());
 
         if (authorities.isEmpty()) {
             throw new UsernameNotFoundException("User has no permissions: " + username);
