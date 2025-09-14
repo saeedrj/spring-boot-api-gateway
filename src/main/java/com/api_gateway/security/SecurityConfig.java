@@ -1,40 +1,80 @@
 package com.api_gateway.security;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import java.util.Arrays;
+import java.util.stream.Stream;
 
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtRequestFilter jwtRequestFilter;
+    @Value("${springdoc.api-docs.enabled}")
+    private boolean isEnabledDoc;
+
+    private final String[] reqMach = {"/user/login", "user/signUp", "/user/forgetPassword", "user/resetPassword", "fallback", "/swagger/**", "/swagger-ui/**"};
+    private final String[] reqMachSwagger = {"/swagger/**", "/swagger-ui/**"};
+    private final ObjectMapper objectMapper;
 
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(AbstractHttpConfigurer::disable)
+    public AuthenticationManager authenticationManager(HttpSecurity http,
+                                                       JwtAuthenticationProvider jwtAuthenticationProvider,
+                                                       DaoAuthenticationProvider daoAuthenticationProvider
+    ) throws Exception {
+        return http.getSharedObject(AuthenticationManagerBuilder.class)
+                .authenticationProvider(jwtAuthenticationProvider)
+                .authenticationProvider(daoAuthenticationProvider)
+                .build();
+    }
+
+
+    @Bean
+    public DaoAuthenticationProvider daoAuthenticationProvider(UserDetailsService userDetailsService,
+                                                               PasswordEncoder passwordEncoder) {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(userDetailsService);
+        provider.setPasswordEncoder(passwordEncoder);
+        return provider;
+    }
+
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http,
+                                           AuthenticationManager authenticationManager) throws Exception {
+
+        String[] allReqMach = isEnabledDoc ? reqMach : Stream.concat(Arrays.stream(reqMach), Arrays.stream(reqMachSwagger))
+                .toArray(String[]::new);
+
+        http.csrf(AbstractHttpConfigurer::disable) //TODO enable in real
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/user/login","user/signUp","/user/forgetPassword","user/resetPassword","fallback","/swagger/**" ,"/swagger-ui/**" ).permitAll()
+                        .requestMatchers(allReqMach).permitAll()
                         .anyRequest().authenticated()
                 )
+                .addFilterBefore(
+                        new JwtRequestFilter(authenticationManager, objectMapper),
+                        org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
+
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
-                .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+                );
 
         return http.build();
     }
@@ -44,9 +84,5 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
-        return authenticationConfiguration.getAuthenticationManager();
-    }
 
 }

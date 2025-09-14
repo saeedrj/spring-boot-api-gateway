@@ -15,7 +15,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -37,7 +36,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .map(rp -> {
                     PermissionEntity permission = rp.getPermission();
                     ServiceEntity service = permission.getServiceEntity();
-                    return new SimpleGrantedAuthority(rp.getRole().getName()+":"+service.getPathName() + "/" + permission.getPathPermission());
+                    return new SimpleGrantedAuthority(rp.getRole().getName() + ":" + service.getPathName() + "/" + permission.getPathPermission());
                 })
                 .collect(Collectors.toList());
 
