@@ -1,10 +1,26 @@
 package com.gateway.service;
 
+import com.gateway.dto.ResponseDto;
+import com.gateway.dto.permissionDto.*;
+
 import java.util.List;
-import java.util.UUID;
 
 public interface PermissionService {
 
-    List<String> getUserPermissions(UUID userId, String requestPath);
+    PermissionResponseDto createPermission(CreatePermissionRequestDto requestDto);
+
+    PermissionResponseDto getPermissionByName(String name);
+
+    List<PermissionResponseDto> getAllPermissions();
+
+    PermissionResponseDto updatePermission(String name, UpdatePermissionRequestDto requestDto);
+
+    ResponseDto deletePermission(String name);
+
+    List<PermissionResponseDto> getPermissionsByRole(String roleName);
+
+    void addPermissionToRole(String roleName, String permissionName);
+
+    void removePermissionFromRole(String roleName, String permissionName);
 
 }

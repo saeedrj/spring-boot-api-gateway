@@ -1,11 +1,10 @@
 package com.gateway.service.impl;
 
 
-import com.gateway.dto.ResponseDto;
 import com.gateway.dto.userRolleDto.*;
 import com.gateway.entity.UserEntity;
-import com.gateway.entity.permission.RoleEntity;
-import com.gateway.entity.permission.UserRoleEntity;
+import com.gateway.entity.accessLevel.RoleEntity;
+import com.gateway.entity.accessLevel.UserRoleEntity;
 import com.gateway.excepotion.RecordException;
 import com.gateway.repository.RoleRepository;
 import com.gateway.repository.UserRepository;

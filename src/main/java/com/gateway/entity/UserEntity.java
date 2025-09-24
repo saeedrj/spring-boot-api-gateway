@@ -1,7 +1,7 @@
 package com.gateway.entity;
 
 
-import com.gateway.entity.permission.UserRoleEntity;
+import com.gateway.entity.accessLevel.UserRoleEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

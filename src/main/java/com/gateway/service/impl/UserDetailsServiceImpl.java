@@ -1,9 +1,9 @@
 package com.gateway.service.impl;
 
 import com.gateway.entity.UserEntity;
-import com.gateway.entity.permission.PermissionEntity;
-import com.gateway.entity.permission.ServiceEntity;
-import com.gateway.entity.permission.UserRoleEntity;
+import com.gateway.entity.accessLevel.PermissionEntity;
+import com.gateway.entity.accessLevel.ServiceEntity;
+import com.gateway.entity.accessLevel.UserRoleEntity;
 import com.gateway.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;

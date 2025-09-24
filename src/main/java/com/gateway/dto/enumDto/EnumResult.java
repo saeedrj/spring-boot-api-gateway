@@ -31,11 +31,12 @@ public enum EnumResult {
     PERMISSION_NOT_FOUND("Permission not found", 101),
     PERMISSION_ASSIGNED("Permission already assigned to role", 107),
     PERMISSION_NOT_ASSIGNED("Permission not assigned to role", 108),
+    PERMISSION_EXISTS("Permission already exists", 108),
 
     // updatePassword
     PASSWORD_IS_NOT_MACH("password is not mach", 102),
     PASSWORD_CHANGED("Password changed successfully", 200),
-    BAD_REQUEST("Bad Request", 400),
+
 
     //resetPassword
     TOKEN_NOT_FOUNT("Token not found", 401),
@@ -54,6 +55,9 @@ public enum EnumResult {
 
     OK("OK", 200),
 
+    BAD_REQUEST("Bad Request", 400),
+    REQUEST_METHOD_EXCEPTION("Request method is not supported", 401),
+
     INTERNAL_SERVER_ERROR("Internal Server Error", 500),
 
     ;
@@ -61,4 +65,8 @@ public enum EnumResult {
 
     private final String message;
     private final int code;
+
+    public final int getCode(){
+        return this.code;
+    }
 }

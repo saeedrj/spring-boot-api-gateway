@@ -1,6 +1,6 @@
 package com.gateway.repository;
 
-import com.gateway.entity.permission.RoleEntity;
+import com.gateway.entity.accessLevel.RoleEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.Optional;

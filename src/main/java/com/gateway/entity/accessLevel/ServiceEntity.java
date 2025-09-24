@@ -1,4 +1,4 @@
-package com.gateway.entity.permission;
+package com.gateway.entity.accessLevel;
 
 import jakarta.persistence.*;
 import lombok.Getter;
